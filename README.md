@@ -13,8 +13,10 @@ By default, it uses the _config.yml file from https://github.com/Pokeylooted/Pok
 - Terminal-based portfolio viewer
 - Fetches data from GitHub or local files
 - Displays personal information, projects, skills, and social links
-- ASCII art logo
-- Keyboard navigation between different sections
+- ASCII art logo on the Home view
+- Dynamic content section navigation based on YAML file
+- Keyboard navigation with arrow keys and numeric shortcuts
+- Support for local _config.yaml file
 - Dark mode support
 
 ## Installation
@@ -54,14 +56,19 @@ Or, if you've built the release version:
 
 ### Navigation
 
-- Press `p` to view Projects
-- Press `s` to view Skills
-- Press `a` to view About
+- Press `h` to return to Home view
+- Press `←/→` arrow keys to navigate between content sections
+- Press number keys (0-9) for direct access to specific content sections
 - Press `q` to quit the application
 
 ## Configuration
 
-The application can be configured to use a different _config.yml file by modifying the URL in the `app.rs` file. Future versions will support command-line arguments for specifying the source file.
+The application can be configured to use a different _config.yml file in two ways:
+
+1. By placing a local `_config.yaml` file in the same directory as the executable
+2. By modifying the URL in the `app.rs` file
+
+Future versions will support command-line arguments for specifying the source file.
 
 ## Project Structure
 
@@ -88,9 +95,10 @@ src/
     └── views/              # Different UI views
         ├── mod.rs
         ├── home.rs         # Home view
-        ├── projects.rs     # Projects view
-        ├── skills.rs       # Skills view
-        └── about.rs        # About view
+        ├── content.rs      # Dynamic content section view
+        ├── projects.rs     # Projects view (legacy)
+        ├── skills.rs       # Skills view (legacy)
+        └── about.rs        # About view (legacy)
 ```
 
 ## License
@@ -103,3 +111,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [crossterm](https://github.com/crossterm-rs/crossterm) - Terminal manipulation library
 - [serde](https://serde.rs/) - Serialization/deserialization framework
 - [reqwest](https://github.com/seanmonstar/reqwest) - HTTP client
+
+## Recent Updates
+
+- Added dynamic content section navigation based on YAML file structure
+- Implemented Home view with portfolio owner's name, title, ASCII art, and contact info
+- Added support for reading from a local _config.yaml file
+- Improved navigation with arrow keys and numeric shortcuts
+- Fixed compiler warnings and improved code organization
