@@ -8,6 +8,9 @@ This application provides a developer-friendly way to view portfolio information
 
 By default, it uses the _config.yml file from https://github.com/Pokeylooted/Pokeylooted.github.io, but it can be configured to use any compatible _config.yml file.
 
+## Example 
+<img width="869" height="369" alt="image" src="https://github.com/user-attachments/assets/6841fbb3-ad06-4ec2-96fa-6885a2dd0272" />
+
 ## Features
 
 - Terminal-based portfolio viewer
