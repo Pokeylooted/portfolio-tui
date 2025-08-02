@@ -1,9 +1,16 @@
+//! Event handling module for future use
+//! 
+//! This module provides event handling capabilities for the application.
+//! It is currently not used but is kept for future enhancements.
+//! The warnings are suppressed with the #[allow(dead_code)] attribute.
+
 use crossterm::event::{self, Event as CrosstermEvent, KeyEvent};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
 /// Terminal events
+#[allow(dead_code)]
 pub enum Event {
     /// Key press
     Key(KeyEvent),
@@ -12,6 +19,7 @@ pub enum Event {
 }
 
 /// Event handler
+#[allow(dead_code)]
 pub struct EventHandler {
     /// Event sender
     sender: mpsc::Sender<Event>,
@@ -21,6 +29,7 @@ pub struct EventHandler {
     handler: thread::JoinHandle<()>,
 }
 
+#[allow(dead_code)]
 impl EventHandler {
     /// Create a new event handler with the given tick rate
     pub fn new(tick_rate: Duration) -> Self {

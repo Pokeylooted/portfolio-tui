@@ -27,6 +27,12 @@ pub struct App {
     current_view: View,
     /// Should quit
     should_quit: bool,
+    /// Config path
+    config_path: String,
+    /// Available content sections
+    content_sections: Vec<String>,
+    /// Current section index
+    current_section_index: usize,
 }
 
 impl App {
@@ -44,6 +50,9 @@ impl App {
             formatted_portfolio: None,
             current_view: View::Home,
             should_quit: false,
+            config_path: args.config_path,
+            content_sections: Vec::new(),
+            current_section_index: 0,
         })
     }
 
@@ -92,7 +101,7 @@ impl App {
         let formatter = Formatter::new();
         
         // Fetch data from source
-        let content = fetcher.fetch("https://github.com/Pokeylooted/Pokeylooted.github.io/raw/main/_config.yml").await?;
+        let content = fetcher.fetch(&self.config_path).await?;
         
         // Parse data
         let portfolio = parser.parse(&content)?;
@@ -103,19 +112,109 @@ impl App {
         // Format the portfolio data for display
         self.formatted_portfolio = Some(formatter.format(&portfolio));
         
+        // Extract content sections for navigation
+        self.extract_content_sections();
+        
         Ok(())
+    }
+    
+    /// Extract content sections for navigation
+    fn extract_content_sections(&mut self) {
+        if let Some(ref formatted_portfolio) = self.formatted_portfolio {
+            // Always include Home as the first section
+            self.content_sections = vec!["Home".to_string()];
+            
+            // Add all content sections from the portfolio
+            for section in &formatted_portfolio.content_sections {
+                self.content_sections.push(section.title.clone());
+            }
+        }
     }
 
     /// Handle key events
     fn handle_key(&mut self, key: KeyCode) {
         match key {
             KeyCode::Char('q') => self.should_quit = true,
-            KeyCode::Char('h') => self.current_view = View::Home,
-            KeyCode::Char('p') => self.current_view = View::Projects,
-            KeyCode::Char('s') => self.current_view = View::Skills,
-            KeyCode::Char('a') => self.current_view = View::About,
+            KeyCode::Char('h') => {
+                self.current_section_index = 0; // Home is always the first section
+                self.current_view = View::Home;
+            },
+            KeyCode::Left | KeyCode::Char('j') => self.previous_section(),
+            KeyCode::Right | KeyCode::Char('l') => self.next_section(),
+            KeyCode::Char(c) => {
+                // Handle numeric keys for direct section navigation
+                if let Some(digit) = c.to_digit(10) {
+                    let index = if digit == 0 { 9 } else { (digit - 1) as usize };
+                    if index < self.content_sections.len() {
+                        self.navigate_to_section(index);
+                    }
+                } else {
+                    // Handle first letter navigation (except for reserved keys)
+                    if c != 'q' && c != 'h' && c != 'j' && c != 'l' {
+                        for (i, section) in self.content_sections.iter().enumerate() {
+                            if !section.is_empty() && section.to_lowercase().starts_with(c.to_lowercase().next().unwrap()) {
+                                self.navigate_to_section(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+            },
             _ => {}
         }
+    }
+    
+    /// Navigate to the previous section
+    fn previous_section(&mut self) {
+        if !self.content_sections.is_empty() {
+            self.current_section_index = if self.current_section_index == 0 {
+                self.content_sections.len() - 1
+            } else {
+                self.current_section_index - 1
+            };
+            self.update_view_from_section();
+        }
+    }
+    
+    /// Navigate to the next section
+    fn next_section(&mut self) {
+        if !self.content_sections.is_empty() {
+            self.current_section_index = (self.current_section_index + 1) % self.content_sections.len();
+            self.update_view_from_section();
+        }
+    }
+    
+    /// Navigate to a specific section by index
+    fn navigate_to_section(&mut self, index: usize) {
+        if index < self.content_sections.len() {
+            self.current_section_index = index;
+            self.update_view_from_section();
+        }
+    }
+    
+    /// Update the current view based on the selected section
+    fn update_view_from_section(&mut self) {
+        if self.content_sections.is_empty() {
+            return;
+        }
+        
+        let section_name = &self.content_sections[self.current_section_index];
+        
+        // Set the view based on the section name
+        self.current_view = match section_name.as_str() {
+            "Home" => View::Home,
+            _ => {
+                // Find the index in the content_sections that corresponds to the formatted_portfolio.content_sections
+                // Home is at index 0, so content sections start at index 1
+                let content_index = if self.current_section_index > 0 {
+                    self.current_section_index - 1
+                } else {
+                    0 // Fallback to first content section if something goes wrong
+                };
+                
+                View::Content(content_index)
+            }
+        };
     }
 
     /// Update state
@@ -142,10 +241,15 @@ impl App {
             // Render the current view
             if let Some(ref formatted_portfolio) = self.formatted_portfolio {
                 match self.current_view {
-                    View::Home => views::home::render(frame, inner_area, formatted_portfolio),
-                    View::Projects => views::projects::render(frame, inner_area, formatted_portfolio),
-                    View::Skills => views::skills::render(frame, inner_area, formatted_portfolio),
-                    View::About => views::about::render(frame, inner_area, formatted_portfolio),
+                    View::Home => views::home::render(frame, inner_area, formatted_portfolio, &self.content_sections),
+                    View::Content(index) => {
+                        if index < formatted_portfolio.content_sections.len() {
+                            views::content::render(frame, inner_area, formatted_portfolio, index);
+                        } else {
+                            // Fallback to home view if the index is out of bounds
+                            views::home::render(frame, inner_area, formatted_portfolio, &self.content_sections);
+                        }
+                    }
                 }
             } else {
                 // Render loading message if portfolio data is not loaded yet

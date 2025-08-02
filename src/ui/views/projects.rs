@@ -1,4 +1,3 @@
-use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
@@ -8,6 +7,7 @@ use ratatui::Frame;
 use crate::processor::formatter::FormattedPortfolio;
 
 /// Render the projects view
+#[allow(dead_code)]
 pub fn render(frame: &mut Frame, area: Rect, portfolio: &FormattedPortfolio) {
     // Get terminal size
     let terminal_width = area.width as usize;
